@@ -11,18 +11,15 @@ HTML_TEMPLATE = """
     <title>Depth Calculator</title>
 </head>
 <body>
-    <h1>Calculate Depth</h1>
+    <h1>Calculate Depth for Path</h1>
+    <p>Formula: depth(K/I) = ⌈n / 3⌉</p>
     <form method="POST">
-        <label for="n_values">Enter n values (comma-separated, n >= 2):</label><br>
-        <input type="text" id="n_values" name="n_values" required><br><br>
-        
-        <label for="t_values">Enter t values (comma-separated):</label><br>
-        <input type="text" id="t_values" name="t_values" required><br><br>
-        
+        <label for="m_values">Enter values of n separated by commas:</label><br>
+        <input type="text" id="m_values" name="m_values" required><br><br>
         <button type="submit">Calculate</button>
     </form>
     {% if results %}
-        <h2>Results:</h2>
+        <h2>Calculated Depths:</h2>
         <ul>
             {% for result in results %}
                 <li>{{ result }}</li>
@@ -33,39 +30,25 @@ HTML_TEMPLATE = """
 </html>
 """
 
-def calculate_depth(n, t):
-    """Calculate the depth using the given formula."""
-    depth_part = math.ceil((n - t + 1) / 3)  # First part of the formula
-    depth = max(depth_part, 1)  # Ensure the depth is at least 1
-    return depth
+def calculate_depth(m):
+    """
+    Calculate the depth of K/I given m, using the formula depth(K/I) = ceil(m / 3).
+    """
+    return math.ceil(m / 3)
 
 @app.route('/', methods=['GET', 'POST'])
 def depth_calculator():
     results = []
     if request.method == 'POST':
-        n_values = request.form.get('n_values', '').split(',')
-        t_values = request.form.get('t_values', '').split(',')
-
-        # Validate that the number of n and t values are the same
-        if len(n_values) != len(t_values):
-            results.append("Error: The number of n and t values must be the same!")
-        else:
-            for n, t in zip(n_values, t_values):
-                try:
-                    n = int(n.strip())  # Convert n to integer
-                    t = int(t.strip())  # Convert t to integer
-
-                    if n < 2:
-                        results.append(f"Invalid n value '{n}'. It should be at least 2.")
-                        continue
-
-                    # Calculate depth
-                    depth = calculate_depth(n, t)
-                    results.append(f"n: {n}, t: {t} => Depth: {depth}")
-                except ValueError:
-                    results.append(f"Invalid input for n: {n.strip()} or t: {t.strip()}. Please enter only integer values.")
-    
+        m_values = request.form.get('m_values', '').strip()
+        try:
+            m_list = [int(m) for m in m_values.split(",")]
+            for m in m_list:
+                depth = calculate_depth(m)
+                results.append(f"For m = {m}, depth(K/I) = {depth}")
+        except ValueError:
+            results.append("Invalid input! Please enter integers separated by commas.")
     return render_template_string(HTML_TEMPLATE, results=results)
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    app.run(debug=True, port=8002)
